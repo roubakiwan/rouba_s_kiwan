@@ -17,8 +17,6 @@ return new class extends Migration
             $table->text('quality');
             $table->double('price');
             $table->string('images');
-            $table->unsignedBigInteger('category_id');
-            $table->unsignedBigInteger('usere_id');
             $table->foreignId('category_id')->constrained()->onDelete('cascade');
             $table->foreignId('usere_id')->constrained()->onDelete('cascade');
             $table->timestamps();
