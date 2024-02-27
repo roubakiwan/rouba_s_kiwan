@@ -10,15 +10,21 @@ use App\Models\Product;
 use App\Models\User;
 use App\Models\Usere;
 use Illuminate\Http\Request;
+use App\Traits;
+use Illuminate\Support\Facades\DB;
 
 class UseresController extends Controller
 {
+    private static function upload(UsersRequest $request)
+    {
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $d=User::query()->get();
+        $d=User::get();
         return response()->json($d);
     }
 
@@ -28,7 +34,7 @@ class UseresController extends Controller
     public function create()
     {
 
-        $v=User::query()->all();
+        $v=User::all();
         return response()->json($v);
     }
 
@@ -36,19 +42,10 @@ class UseresController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(UsersRequest $request)
-    {  $data=$request->all();
-        $image=new Image;
-        $getImage=$request->file('image');
-        $imageName=time().".".$getImage->extension();
-        $image->move(public_path('image'),$imageName);
-
-        $user=User::query()->create($data);
-        $user->image()->save($image);
-        return response()->json([
-            'success'=>true,
-            'message'=>"successful",
-            "data"=>$user
-        ]);
+    {
+        $u=Usere::create($request->all());
+        self::upload($request);
+        return response()->json($u);
         //
     }
 
@@ -57,7 +54,7 @@ class UseresController extends Controller
      */
     public function show(string $id)
     {
-      $h=query()->where('id',$id)->first();
+      $h=where('id',$id)->first();
         return response()->json($h);
     }
 
@@ -66,18 +63,26 @@ class UseresController extends Controller
      */
     public function edit(string $id)
     {
-      $n=Usere::query()->where('id',$id)->first();
+      $n=Usere::where('id',$id)->first();
         return response()->json($n);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UsersRequest $request, string $id)
     {
-        $ttt=Usere::query()->where('id',$id)->first();
-        $ttt->update();
-
+        $user = User::where('id', $id)->first();
+        if ($user) {
+            $updated = $user->update($request->except('image'));
+            $image = $this->image($request, 'image', 'user');
+            if ($updated && $image) {
+                DB::commit();
+                return $this->returnSucess('the upload was completed successfully');
+            } else {
+                return $this->returnError('there is an error the upload process');
+            }
+        }
     }
 
     /**
@@ -85,7 +90,7 @@ class UseresController extends Controller
      */
     public function destroy(string $id)
     {
-        $o=Usere::query()->where('id',$id)->first();
+        $o=Usere::where('id',$id)->first();
         $o->destroy();
     }
 }

@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('name');
             $table->double('age');
             $table->string('job');
-            $table->string('image');
             $table->timestamps();
         });
     }

@@ -11,19 +11,23 @@ use Illuminate\Support\Facades\App;
 class Product extends Model
 {
     use HasFactory;
-    protected $fillable = ['name', 'quality','price','images','category_id','usere_id'];
+    protected $fillable = ['name', 'quality','price','category_id','usere_id'];
 
     public function category():BelongsTo
     {
-        return $this->belongsTo(Category::class, 'category_id');
+        return $this->belongsTo(Category::class,'category');
     }
     public function User():BelongsTo
     {
-        return $this->belongsTo(Usere::class, 'usere_id');
+        return $this->belongsTo(Usere::class,'usere');
     }
     public function images():MorphMany
     {
         return $this->morphMany(Image::class,'name');
+    }
+    public function subcategories()
+    {
+        return $this->belongsTo(Subcategory::class);
     }
     protected $hidden=['created_from'];
     private mixed $created_at;
@@ -31,6 +35,15 @@ class Product extends Model
     public function getCreatedFromAttributes()
     {
         return $this->created_at->diffForHumans();
+    }
+    public  static function boot()
+    {
+        parent::boot();
+        static::saving(function ($product){
+            if ($product->price<150){
+                return false;
+            }
+        });
     }
 
 }

@@ -16,7 +16,6 @@ return new class extends Migration
             $table->text('name');
             $table->text('quality');
             $table->text('source');
-            $table->string('image');
             $table->timestamps();
         });
     }

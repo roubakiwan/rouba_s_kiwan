@@ -4,12 +4,23 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\ProductRequest;
+use App\Models\Category;
 use App\Models\Image;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use App\Traits;
+use Illuminate\Support\Facades\DB;
 
 class ProductsController extends Controller
 {
+    private static function upload(ProductRequest $request)
+    {
+    }
+
+    private static function uploade(ProductRequest $request)
+    {
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -32,30 +43,10 @@ class ProductsController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(ProductRequest $request)
-    {   $productData=$request->all();
-        if ($productData['price']<150){
-            return response()->json(['message'=>'false'],400);
-        }
-      $product=Product::query()->create($request->all());
-      $allowedfileExtension=['gif','png','jpg'];
-      $files=$request->file('fileName');
-      foreach ($files as $file){
-          $extension=$file->getClientOriginalExtension();
-          $check=in_array($extension,$allowedfileExtension);
-          if ($check){
-              foreach ($request->fileName as $mediaFiles) {
-                  $url = $mediaFiles->store('public/images');
-                  $image = new Image();
-                  $image->url=$url;
-              }
-              }
-          else {
-              return response()->json(['invalid_file_format'], 422);
-          }
-          }
-      $product->image()->save($image);
-      $product->save();
-      return response()->json($product,201);
+    {
+        $p=Product::create($request->all());
+        self::uploade($request);
+        return response()->json($p);
 
       }
     /**
@@ -63,7 +54,7 @@ class ProductsController extends Controller
      */
     public function show(string $id)
     {
-        $f=Product::query()->where('id',$id)->first();
+        $f=Product::where('id',$id)->first();
         return response()->json($f);
     }
 
@@ -72,17 +63,27 @@ class ProductsController extends Controller
      */
     public function edit(string $id)
     {
-        $l=Product::query()->where('id',$id)->first();
+        $l=Product::where('id',$id)->first();
         return response()->json($l);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(ProductRequest $request, string $id)
     {
-        $pro=Product::query()->where('id',$id)->first();
-        $pro->update();
+
+        $pro = Product::where('id', $id)->first();
+        if ($pro) {
+            $updated = $pro->update($request->except('image'));
+            $image = $this->image($request, 'image', 'product');
+            if ($updated && $image) {
+                DB::commit();
+                return $this->returnSucess('the upload was completed successfully');
+            } else {
+                return $this->returnError('there is an error the upload process');
+            }
+        }
     }
 
     /**
@@ -90,7 +91,7 @@ class ProductsController extends Controller
      */
     public function destroy(string $id)
     {
-        $w=Product::query()->where('id',$id)->first();
+        $w=Product::where('id',$id)->first();
         $w->destroy();
     }
 }

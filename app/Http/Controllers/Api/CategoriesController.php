@@ -8,19 +8,22 @@ use App\Models\Category;
 use App\Models\Image;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use App\Traits;
+use Illuminate\Support\Facades\DB;
 
 class CategoriesController extends Controller
 {
+    private static function upload(CategoriesRequest $request)
+    {
+    }
+
     /**
      * Display a listing of the resource.
      */
-    public function index($categoryId)
-    {   $category=Category::query()->findOrFail($categoryId);
-        $products=$category->products()->whereHas('user',function ($query)
-        {
-            $query->where('name','like','%a%');
-        })->get();
-        return response()->json($products,200);
+    public function index()
+    {
+      $categories=Category::with('subcategories.products')->get();
+      return response()->json($categories);
     }
 
     /**
@@ -28,7 +31,7 @@ class CategoriesController extends Controller
      */
     public function create()
     {
-        $j=Product::query()->all();
+        $j=Product::all();
         return response()->json($j);
     }
 
@@ -36,23 +39,10 @@ class CategoriesController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(CategoriesRequest $request)
-    {   $data=$request->all();
-        $image=new Image;
-        $getImage=$request->file('image');
-        $imageName=time().".".$getImage->extension();
-        $image->move(public_path('image'),$imageName);
-
-        $category=Category::query()->create($data);
-        $category->image()->save($image);
-        return response()->json([
-            'success'=>true,
-            'message'=>"successful",
-            "data"=>$category
-        ]);
-
+    {
         $ca=Category::query()->create($request->all());
-        return response()->json($ca,201);
-        //
+        self::upload($request);
+        return response()->json($ca);
     }
 
     /**
@@ -60,8 +50,10 @@ class CategoriesController extends Controller
      */
     public function show(string $id )
     {
-        $show=Category::query()->where('id',$id)->first();
-        return response()->json($show);
+        $category=Category::with(['product','user'])->whereHas('user',function ($query){
+        $query-> where('name','like','%a%');
+             })->get();
+        return response()->json($category);
     }
 
     /**
@@ -69,17 +61,28 @@ class CategoriesController extends Controller
      */
     public function edit(string $id)
     {
-        $q=Category::query()->where('id',$id)->first();
+        $q=Category::where('id',$id)->first();
         return response()->json($q);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(CategoriesRequest $request, string $id)
     {
-        $s=Category::query()->where('id',$id)->first();
-        $s->update();
+        $s=Category::where('id',$id)->first();
+        if ($s){
+            $updated=$s->update($request->except('image'));
+            $image=$this->image($request,'image','category');
+            if ($updated && $image) {
+                DB::commit();
+                return $this->returnSucess('the upload was completed successfully');
+            }
+            else{
+                return  $this->returnError('there is an error the upload process');
+            }
+        }
+
     }
 
     /**
@@ -87,7 +90,7 @@ class CategoriesController extends Controller
      */
     public function destroy(string $id)
     {
-        $w=Category::query()->where('id',$id)->first();
+        $w=Category::where('id',$id)->first();
         $w->destroy();
     }
 }

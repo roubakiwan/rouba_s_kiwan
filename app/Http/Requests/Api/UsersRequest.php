@@ -26,7 +26,7 @@ class UsersRequest extends FormRequest
             'name'=>'required',
             'age'=>'required',
             'job'=>'required',
-            'image'=>'required|image|type:jpg,png,gif|max:2.70MB|min_width=2160,min_height=3840',
+            'image'=>'required|image|mimes:jpg,png,gif|max:2765|min_width=3840,min_height=2160',
 
         ];
     }

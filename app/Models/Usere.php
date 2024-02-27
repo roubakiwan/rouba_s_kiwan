@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 class Usere extends Model
 {
     use HasFactory;
-    protected $fillable = ['name', 'age', 'job','image'];
+    protected $fillable = ['name', 'age', 'job'];
 
     public function product():HasMany
     {

@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Category extends Model
 {
     use HasFactory;
-    protected $fillable=['name','quality','source','image'];
+    protected $fillable=['name','quality','source'];
     private mixed $created_at;
 
     public function product():HasMany
@@ -20,6 +20,10 @@ class Category extends Model
     public function image()
     {
         return $this->morphOne(Image::class,'imageable');
+    }
+    public function subcategories()
+    {
+        return $this->hasMany(Subcategory::class);
     }
     protected $hidden=['created_from'];
 
